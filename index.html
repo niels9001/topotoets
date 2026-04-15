@@ -250,8 +250,8 @@
       boxZoom: false,
       keyboard: false,
       touchZoom: true,
-      minZoom: 8,
-      maxZoom: 10,
+      minZoom: 7,
+      maxZoom: 12,
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
@@ -260,6 +260,11 @@
     }).addTo(leafletMap);
 
     leafletMap.fitBounds([[51.70, 3.50], [53.05, 5.55]]);
+
+    // Zet huidige zoom als minimum (niet uitzoomen) en +1 als max
+    const startZoom = leafletMap.getZoom();
+    leafletMap.setMinZoom(startZoom);
+    leafletMap.setMaxZoom(startZoom + 1);
 
     // ── Provinciegrenzen (PDOK CBS data) ─────
     L.geoJSON(PROVINCE_GEOJSON, {
