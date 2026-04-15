@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TopoToets – Noord- &amp; Zuid-Holland</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -18,123 +19,67 @@
       color: #1e293b;
     }
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.2rem;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-      color: #64748b;
-      margin-bottom: 1rem;
-    }
+    h1 { font-size: 1.8rem; margin-bottom: 0.2rem; }
+    .subtitle { font-size: 1rem; color: #64748b; margin-bottom: 1rem; }
 
     .container {
       display: flex;
       gap: 2rem;
-      max-width: 900px;
+      max-width: 960px;
       width: 100%;
       align-items: flex-start;
     }
 
     /* ── Kaart ─────────────────────────────── */
     .map-area {
-      flex: 1.2;
+      flex: 1.3;
       background: #fff;
       border-radius: 12px;
-      padding: 1rem;
+      overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .map-area svg {
+    #map {
       width: 100%;
-      height: auto;
-      display: block;
+      height: 70vh;
+      min-height: 420px;
+      max-height: 680px;
     }
 
-    .province {
-      fill: #e2e8f0;
-      stroke: #94a3b8;
-      stroke-width: 2;
-      stroke-linejoin: round;
-    }
+    .leaflet-control-attribution { font-size: 10px; opacity: 0.6; }
 
-    .province-label {
-      fill: #94a3b8;
-      font-size: 18px;
+    .matched-tooltip {
+      background: #166534;
+      border: none;
+      color: #fff;
       font-weight: 600;
-      pointer-events: none;
-      user-select: none;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .matched-tooltip::before {
+      border-top-color: #166534 !important;
     }
 
-    .water-label {
-      fill: #93c5fd;
-      font-size: 15px;
-      font-style: italic;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .dot {
-      fill: #3b82f6;
-      stroke: transparent;
-      stroke-width: 18;
-      cursor: pointer;
-      pointer-events: all;
-      transition: fill 0.2s;
-    }
-
-    .dot:hover {
-      fill: #2563eb;
-    }
-
-    .dot.selected {
-      fill: #f59e0b;
-      animation: pulse 1s infinite;
-    }
-
-    .dot.matched {
-      fill: #22c55e;
-      cursor: default;
-      animation: none;
-    }
-
-    .dot.wrong {
-      fill: #ef4444;
-      animation: none;
-    }
-
-    .city-label {
+    .province-overlay {
       font-size: 13px;
-      font-weight: 600;
-      fill: #1e293b;
+      font-weight: 700;
+      color: #94a3b8;
+      white-space: nowrap;
       pointer-events: none;
-      user-select: none;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-
-    .city-label.visible {
-      opacity: 1;
-    }
-
-    @keyframes pulse {
-      0%, 100% { r: 12; }
-      50% { r: 16; }
+      text-shadow: 1px 1px 2px #fff;
     }
 
     /* ── Zijbalk ──────────────────────────── */
     .sidebar {
-      flex: 0.8;
+      flex: 0.7;
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
     }
 
-    .sidebar h2 {
-      font-size: 1.2rem;
-      color: #475569;
-    }
+    .sidebar h2 { font-size: 1.2rem; color: #475569; }
 
     .city-list {
       display: flex;
@@ -190,11 +135,7 @@
       padding: 0.6rem 0;
     }
 
-    .score {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #334155;
-    }
+    .score { font-size: 1.1rem; font-weight: 700; color: #334155; }
 
     .reset-btn {
       padding: 0.5rem 1rem;
@@ -207,83 +148,39 @@
       transition: all 0.2s;
     }
 
-    .reset-btn:hover {
-      background: #e2e8f0;
-      border-color: #64748b;
-    }
+    .reset-btn:hover { background: #e2e8f0; border-color: #64748b; }
 
-    .hint {
-      font-size: 0.95rem;
-      color: #64748b;
-      min-height: 1.4rem;
-      padding: 0.5rem 0;
-    }
-
-    .hint.correct {
-      color: #16a34a;
-      font-weight: 600;
-    }
-
-    .hint.wrong {
-      color: #dc2626;
-      font-weight: 600;
-    }
+    .hint { font-size: 0.95rem; color: #64748b; min-height: 1.4rem; padding: 0.5rem 0; }
+    .hint.correct { color: #16a34a; font-weight: 600; }
+    .hint.wrong { color: #dc2626; font-weight: 600; }
 
     /* ── Feest! ────────────────────────────── */
     .celebration {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
     }
 
-    .celebration.hidden {
-      display: none;
-    }
+    .celebration.hidden { display: none; }
 
     .celebration-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 2.5rem;
-      text-align: center;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      background: #fff; border-radius: 16px; padding: 2.5rem;
+      text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
       animation: pop-in 0.4s ease-out;
     }
 
-    .celebration-card h2 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .celebration-card p {
-      font-size: 1.1rem;
-      color: #475569;
-      margin-bottom: 1.5rem;
-    }
-
-    .celebration-card .stars {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
+    .celebration-card h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .celebration-card p { font-size: 1.1rem; color: #475569; margin-bottom: 1.5rem; }
+    .celebration-card .stars { font-size: 2.5rem; margin-bottom: 1rem; }
 
     .celebration-card button {
-      padding: 0.7rem 1.5rem;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 8px;
-      background: #3b82f6;
-      color: #fff;
-      cursor: pointer;
-      font-family: inherit;
+      padding: 0.7rem 1.5rem; font-size: 1.1rem; border: none; border-radius: 8px;
+      background: #3b82f6; color: #fff; cursor: pointer; font-family: inherit;
       transition: background 0.2s;
     }
 
-    .celebration-card button:hover {
-      background: #2563eb;
-    }
+    .celebration-card button:hover { background: #2563eb; }
 
     @keyframes pop-in {
       0% { transform: scale(0.5); opacity: 0; }
@@ -292,19 +189,10 @@
 
     /* ── Responsive ────────────────────────── */
     @media (max-width: 700px) {
-      .container {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .map-area {
-        padding: 0.5rem;
-      }
-
-      .sidebar {
-        width: 100%;
-      }
-
+      .container { flex-direction: column; gap: 1rem; }
+      .map-area { width: 100%; }
+      #map { height: 50vh; min-height: 300px; }
+      .sidebar { width: 100%; }
       h1 { font-size: 1.4rem; }
     }
   </style>
@@ -315,35 +203,7 @@
 
   <div class="container">
     <div class="map-area">
-      <svg viewBox="0 0 500 700" id="map">
-        <!-- Provinciecontouren -->
-        <path class="province" id="noord-holland" d="
-          M 190,260 L 195,220 L 200,185 L 210,150 L 225,115
-          L 240,90 L 253,75 L 268,73 L 285,80 L 320,105
-          L 360,135 L 400,170 L 435,205 L 425,235 L 395,230
-          L 370,250 L 360,290 L 355,330 L 362,370 L 355,405
-          L 325,428 L 290,442 L 255,448 L 220,438 L 195,420
-          L 175,400 L 178,370 L 180,340 L 184,310 Z" />
-        <path class="province" id="zuid-holland" d="
-          M 175,400 L 195,420 L 220,438 L 255,448 L 290,442
-          L 325,428 L 355,405 L 370,430 L 380,460 L 385,495
-          L 390,530 L 380,555 L 360,580 L 330,605 L 295,625
-          L 260,640 L 220,650 L 180,652 L 140,645 L 105,630
-          L 80,610 L 68,585 L 65,555 L 70,525 L 80,500
-          L 92,478 L 108,458 L 130,440 L 155,418 Z" />
-
-        <!-- Provincienamen -->
-        <text class="province-label" x="280" y="300" text-anchor="middle">Noord-Holland</text>
-        <text class="province-label" x="230" y="540" text-anchor="middle">Zuid-Holland</text>
-
-        <!-- Waterlabels -->
-        <text class="water-label" x="60" y="300" text-anchor="middle"
-              transform="rotate(-90, 60, 300)">Noordzee</text>
-        <text class="water-label" x="450" y="330" text-anchor="middle">IJsselmeer</text>
-
-        <!-- Stippen en labels worden door JS toegevoegd -->
-        <g id="cities-group"></g>
-      </svg>
+      <div id="map"></div>
     </div>
 
     <div class="sidebar">
@@ -363,27 +223,67 @@
     <div class="celebration-card">
       <div class="stars" id="stars"></div>
       <h2>🎉 Gefeliciteerd!</h2>
-      <p id="resultText">Je hebt alle steden goed!</p>
+      <p id="resultText"></p>
       <button onclick="resetGame()">Nog een keer!</button>
     </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    // ── Kaart ──────────────────────────────
+    const leafletMap = L.map('map', {
+      zoomControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      maxZoom: 19,
+    }).addTo(leafletMap);
+
+    leafletMap.fitBounds([[51.55, 3.35], [53.20, 5.65]]);
+
+    // Provincienamen op de kaart
+    [
+      { text: 'Noord-Holland', lat: 52.55, lng: 4.75 },
+      { text: 'Zuid-Holland',  lat: 52.00, lng: 4.45 },
+    ].forEach(p => {
+      L.marker([p.lat, p.lng], {
+        icon: L.divIcon({ html: p.text, className: 'province-overlay', iconSize: null }),
+        interactive: false,
+      }).addTo(leafletMap);
+    });
+
+    // ── Steden ─────────────────────────────
     const cities = [
-      { id: 'den-helder',  name: 'Den Helder',  x: 257, y: 82,  labelDx: 0,   labelDy: -22, anchor: 'middle' },
-      { id: 'enkhuizen',   name: 'Enkhuizen',   x: 420, y: 212, labelDx: -18, labelDy: -15, anchor: 'end'    },
-      { id: 'haarlem',     name: 'Haarlem',      x: 213, y: 388, labelDx: -18, labelDy: 5,   anchor: 'end'    },
-      { id: 'amsterdam',   name: 'Amsterdam',    x: 300, y: 393, labelDx: 18,  labelDy: -5,  anchor: 'start'  },
-      { id: 'schiphol',    name: 'Schiphol',     x: 253, y: 425, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
-      { id: 'leiden',      name: 'Leiden',        x: 163, y: 506, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
-      { id: 'den-haag',    name: 'Den Haag',     x: 100, y: 549, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
-      { id: 'delft',       name: 'Delft',         x: 120, y: 587, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
-      { id: 'gouda',       name: 'Gouda',         x: 237, y: 587, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
-      { id: 'rotterdam',   name: 'Rotterdam',    x: 160, y: 635, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+      { id: 'den-helder', name: 'Den Helder', lat: 52.9563, lng: 4.7594 },
+      { id: 'enkhuizen',  name: 'Enkhuizen',  lat: 52.7076, lng: 5.2953 },
+      { id: 'haarlem',    name: 'Haarlem',     lat: 52.3813, lng: 4.6369 },
+      { id: 'amsterdam',  name: 'Amsterdam',   lat: 52.3676, lng: 4.9041 },
+      { id: 'schiphol',   name: 'Schiphol',    lat: 52.3105, lng: 4.7683 },
+      { id: 'leiden',     name: 'Leiden',       lat: 52.1601, lng: 4.4970 },
+      { id: 'den-haag',   name: 'Den Haag',    lat: 52.0705, lng: 4.3007 },
+      { id: 'delft',      name: 'Delft',        lat: 52.0116, lng: 4.3571 },
+      { id: 'gouda',      name: 'Gouda',        lat: 52.0115, lng: 4.7105 },
+      { id: 'rotterdam',  name: 'Rotterdam',   lat: 51.9225, lng: 4.4792 },
     ];
 
+    const STYLES = {
+      normal:   { fillColor: '#3b82f6', color: '#2563eb', weight: 2, fillOpacity: 0.9 },
+      selected: { fillColor: '#f59e0b', color: '#d97706', weight: 3, fillOpacity: 1   },
+      matched:  { fillColor: '#22c55e', color: '#15803d', weight: 2, fillOpacity: 0.9 },
+      wrong:    { fillColor: '#ef4444', color: '#dc2626', weight: 3, fillOpacity: 1   },
+    };
+
+    // ── Game state ─────────────────────────
+    let markers = {};
     let selectedDot = null;
-    let matched = new Set();
+    let matchedSet = new Set();
     let mistakes = 0;
 
     function shuffle(arr) {
@@ -396,31 +296,18 @@
     }
 
     function init() {
-      const svgNS = 'http://www.w3.org/2000/svg';
-      const group = document.getElementById('cities-group');
-      group.innerHTML = '';
+      // Oude markers verwijderen
+      Object.values(markers).forEach(m => leafletMap.removeLayer(m));
+      markers = {};
 
-      // Stippen en labels op de kaart
+      // Stippen op de kaart
       cities.forEach(city => {
-        // Klikbare stip
-        const dot = document.createElementNS(svgNS, 'circle');
-        dot.setAttribute('cx', city.x);
-        dot.setAttribute('cy', city.y);
-        dot.setAttribute('r', 12);
-        dot.classList.add('dot');
-        dot.dataset.city = city.id;
-        dot.addEventListener('click', () => selectDot(city.id));
-        group.appendChild(dot);
-
-        // Stadsnaam (verschijnt na correct antwoord)
-        const label = document.createElementNS(svgNS, 'text');
-        label.setAttribute('x', city.x + city.labelDx);
-        label.setAttribute('y', city.y + city.labelDy);
-        label.setAttribute('text-anchor', city.anchor);
-        label.classList.add('city-label');
-        label.dataset.city = city.id;
-        label.textContent = city.name;
-        group.appendChild(label);
+        const marker = L.circleMarker([city.lat, city.lng], {
+          ...STYLES.normal,
+          radius: 12,
+        }).addTo(leafletMap);
+        marker.on('click', () => selectDot(city.id));
+        markers[city.id] = marker;
       });
 
       // Knoppen in de zijbalk (geschud)
@@ -440,54 +327,61 @@
     }
 
     function selectDot(cityId) {
-      if (matched.has(cityId)) return;
+      if (matchedSet.has(cityId)) return;
 
-      // Vorige selectie verwijderen
-      document.querySelectorAll('.dot.selected').forEach(d => d.classList.remove('selected'));
+      // Vorige selectie resetten
+      if (selectedDot && !matchedSet.has(selectedDot)) {
+        markers[selectedDot].setStyle(STYLES.normal);
+      }
 
-      // Nieuwe selectie
-      const dot = document.querySelector(`.dot[data-city="${cityId}"]`);
-      dot.classList.add('selected');
+      markers[cityId].setStyle(STYLES.selected);
       selectedDot = cityId;
       setHint('Welke stad hoort bij deze stip?', '');
     }
 
     function checkMatch(cityId) {
-      if (matched.has(cityId)) return;
+      if (matchedSet.has(cityId)) return;
 
       if (!selectedDot) {
         setHint('Klik eerst op een stip op de kaart!', 'wrong');
         return;
       }
 
-      const dot = document.querySelector(`.dot[data-city="${selectedDot}"]`);
       const btn = document.querySelector(`.city-btn[data-city="${cityId}"]`);
-      const label = document.querySelector(`.city-label[data-city="${selectedDot}"]`);
 
       if (cityId === selectedDot) {
         // Goed!
-        matched.add(cityId);
-        dot.classList.remove('selected');
-        dot.classList.add('matched');
+        matchedSet.add(cityId);
+        markers[cityId].setStyle(STYLES.matched);
+
+        const city = cities.find(c => c.id === cityId);
+        markers[cityId].bindTooltip(city.name, {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -14],
+          className: 'matched-tooltip',
+        });
+
         btn.classList.add('matched');
-        label.classList.add('visible');
         selectedDot = null;
         updateScore();
         setHint('Goed zo! ✓', 'correct');
 
-        if (matched.size === cities.length) {
+        if (matchedSet.size === cities.length) {
           setTimeout(showCelebration, 600);
         }
       } else {
         // Fout!
         mistakes++;
-        dot.classList.add('wrong');
+        const current = selectedDot;
+        markers[current].setStyle(STYLES.wrong);
         btn.classList.add('wrong');
         setHint('Helaas, probeer het nog eens!', 'wrong');
 
         setTimeout(() => {
-          dot.classList.remove('wrong');
-          dot.classList.add('selected');
+          if (selectedDot === current && !matchedSet.has(current)) {
+            markers[current].setStyle(STYLES.selected);
+          }
           btn.classList.remove('wrong');
         }, 500);
       }
@@ -495,7 +389,7 @@
 
     function updateScore() {
       document.getElementById('score').textContent =
-        `Score: ${matched.size} / ${cities.length}`;
+        `Score: ${matchedSet.size} / ${cities.length}`;
     }
 
     function setHint(text, type) {
@@ -508,12 +402,8 @@
       const el = document.getElementById('celebration');
       el.classList.remove('hidden');
 
-      // Sterren op basis van fouten
-      const starsEl = document.getElementById('stars');
-      let starCount = 3;
-      if (mistakes > 0) starCount = 2;
-      if (mistakes > 3) starCount = 1;
-      starsEl.textContent = '⭐'.repeat(starCount);
+      let starCount = mistakes === 0 ? 3 : mistakes <= 3 ? 2 : 1;
+      document.getElementById('stars').textContent = '⭐'.repeat(starCount);
 
       const resultEl = document.getElementById('resultText');
       if (mistakes === 0) {
@@ -528,7 +418,7 @@
     function resetGame() {
       document.getElementById('celebration').classList.add('hidden');
       selectedDot = null;
-      matched = new Set();
+      matchedSet = new Set();
       mistakes = 0;
       init();
     }
