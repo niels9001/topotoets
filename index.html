@@ -2,22 +2,26 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TopoToets – Noord- &amp; Zuid-Holland</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html, body { height: 100%; overflow: hidden; }
+
     body {
       font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
       background: #f0f4f8;
-      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 1rem;
       color: #1e293b;
       overflow: hidden;
+      position: fixed;
+      width: 100%;
     }
 
     .top-bar {
