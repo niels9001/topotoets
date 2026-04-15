@@ -388,9 +388,18 @@
 
       // Stippen op de kaart
       cities.forEach(city => {
+        // Onzichtbare grotere cirkel voor touch
+        const hitArea = L.circleMarker([city.lat, city.lng], {
+          radius: 20,
+          fillOpacity: 0,
+          opacity: 0,
+          interactive: true,
+        }).addTo(leafletMap);
+        hitArea.on('click', () => selectDot(city.id));
+
         const marker = L.circleMarker([city.lat, city.lng], {
           ...STYLES.normal,
-          radius: 9,
+          radius: 10,
         }).addTo(leafletMap);
         marker.on('click', () => selectDot(city.id));
         markers[city.id] = marker;
