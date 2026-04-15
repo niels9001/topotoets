@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TopoToets – Noord- &amp; Zuid-Holland</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      color: #1e293b;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      display: flex;
+      gap: 2rem;
+      max-width: 900px;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    /* ── Kaart ─────────────────────────────── */
+    .map-area {
+      flex: 1.2;
+      background: #fff;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .map-area svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .province {
+      fill: #e2e8f0;
+      stroke: #94a3b8;
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+
+    .province-label {
+      fill: #94a3b8;
+      font-size: 18px;
+      font-weight: 600;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .water-label {
+      fill: #93c5fd;
+      font-size: 15px;
+      font-style: italic;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .dot {
+      fill: #3b82f6;
+      stroke: transparent;
+      stroke-width: 18;
+      cursor: pointer;
+      pointer-events: all;
+      transition: fill 0.2s;
+    }
+
+    .dot:hover {
+      fill: #2563eb;
+    }
+
+    .dot.selected {
+      fill: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    .dot.matched {
+      fill: #22c55e;
+      cursor: default;
+      animation: none;
+    }
+
+    .dot.wrong {
+      fill: #ef4444;
+      animation: none;
+    }
+
+    .city-label {
+      font-size: 13px;
+      font-weight: 600;
+      fill: #1e293b;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .city-label.visible {
+      opacity: 1;
+    }
+
+    @keyframes pulse {
+      0%, 100% { r: 12; }
+      50% { r: 16; }
+    }
+
+    /* ── Zijbalk ──────────────────────────── */
+    .sidebar {
+      flex: 0.8;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      color: #475569;
+    }
+
+    .city-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .city-btn {
+      padding: 0.7rem 1rem;
+      font-size: 1.05rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      text-align: left;
+    }
+
+    .city-btn:hover:not(.matched) {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    .city-btn.matched {
+      background: #22c55e;
+      border-color: #16a34a;
+      color: #fff;
+      cursor: default;
+      text-decoration: line-through;
+    }
+
+    .city-btn.wrong {
+      animation: shake 0.45s;
+      border-color: #ef4444;
+      background: #fef2f2;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    /* ── Score & hint ─────────────────────── */
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      padding: 0.6rem 0;
+    }
+
+    .score {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .reset-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      border: 2px solid #94a3b8;
+      border-radius: 8px;
+      background: #f8fafc;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: #e2e8f0;
+      border-color: #64748b;
+    }
+
+    .hint {
+      font-size: 0.95rem;
+      color: #64748b;
+      min-height: 1.4rem;
+      padding: 0.5rem 0;
+    }
+
+    .hint.correct {
+      color: #16a34a;
+      font-weight: 600;
+    }
+
+    .hint.wrong {
+      color: #dc2626;
+      font-weight: 600;
+    }
+
+    /* ── Feest! ────────────────────────────── */
+    .celebration {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .celebration.hidden {
+      display: none;
+    }
+
+    .celebration-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      animation: pop-in 0.4s ease-out;
+    }
+
+    .celebration-card h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .celebration-card p {
+      font-size: 1.1rem;
+      color: #475569;
+      margin-bottom: 1.5rem;
+    }
+
+    .celebration-card .stars {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .celebration-card button {
+      padding: 0.7rem 1.5rem;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+
+    .celebration-card button:hover {
+      background: #2563eb;
+    }
+
+    @keyframes pop-in {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ── Responsive ────────────────────────── */
+    @media (max-width: 700px) {
+      .container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .map-area {
+        padding: 0.5rem;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+
+      h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🗺️ TopoToets</h1>
+  <p class="subtitle">Noord- &amp; Zuid-Holland</p>
+
+  <div class="container">
+    <div class="map-area">
+      <svg viewBox="0 0 500 700" id="map">
+        <!-- Provinciecontouren -->
+        <path class="province" id="noord-holland" d="
+          M 190,260 L 195,220 L 200,185 L 210,150 L 225,115
+          L 240,90 L 253,75 L 268,73 L 285,80 L 320,105
+          L 360,135 L 400,170 L 435,205 L 425,235 L 395,230
+          L 370,250 L 360,290 L 355,330 L 362,370 L 355,405
+          L 325,428 L 290,442 L 255,448 L 220,438 L 195,420
+          L 175,400 L 178,370 L 180,340 L 184,310 Z" />
+        <path class="province" id="zuid-holland" d="
+          M 175,400 L 195,420 L 220,438 L 255,448 L 290,442
+          L 325,428 L 355,405 L 370,430 L 380,460 L 385,495
+          L 390,530 L 380,555 L 360,580 L 330,605 L 295,625
+          L 260,640 L 220,650 L 180,652 L 140,645 L 105,630
+          L 80,610 L 68,585 L 65,555 L 70,525 L 80,500
+          L 92,478 L 108,458 L 130,440 L 155,418 Z" />
+
+        <!-- Provincienamen -->
+        <text class="province-label" x="280" y="300" text-anchor="middle">Noord-Holland</text>
+        <text class="province-label" x="230" y="540" text-anchor="middle">Zuid-Holland</text>
+
+        <!-- Waterlabels -->
+        <text class="water-label" x="60" y="300" text-anchor="middle"
+              transform="rotate(-90, 60, 300)">Noordzee</text>
+        <text class="water-label" x="450" y="330" text-anchor="middle">IJsselmeer</text>
+
+        <!-- Stippen en labels worden door JS toegevoegd -->
+        <g id="cities-group"></g>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <h2>Steden</h2>
+      <div class="city-list" id="cityList"></div>
+
+      <div class="score-bar">
+        <span class="score" id="score">Score: 0 / 10</span>
+        <button class="reset-btn" onclick="resetGame()">🔄 Opnieuw</button>
+      </div>
+
+      <p class="hint" id="hint">Klik op een stip op de kaart!</p>
+    </div>
+  </div>
+
+  <div class="celebration hidden" id="celebration">
+    <div class="celebration-card">
+      <div class="stars" id="stars"></div>
+      <h2>🎉 Gefeliciteerd!</h2>
+      <p id="resultText">Je hebt alle steden goed!</p>
+      <button onclick="resetGame()">Nog een keer!</button>
+    </div>
+  </div>
+
+  <script>
+    const cities = [
+      { id: 'den-helder',  name: 'Den Helder',  x: 257, y: 82,  labelDx: 0,   labelDy: -22, anchor: 'middle' },
+      { id: 'enkhuizen',   name: 'Enkhuizen',   x: 420, y: 212, labelDx: -18, labelDy: -15, anchor: 'end'    },
+      { id: 'haarlem',     name: 'Haarlem',      x: 213, y: 388, labelDx: -18, labelDy: 5,   anchor: 'end'    },
+      { id: 'amsterdam',   name: 'Amsterdam',    x: 300, y: 393, labelDx: 18,  labelDy: -5,  anchor: 'start'  },
+      { id: 'schiphol',    name: 'Schiphol',     x: 253, y: 425, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+      { id: 'leiden',      name: 'Leiden',        x: 163, y: 506, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+      { id: 'den-haag',    name: 'Den Haag',     x: 100, y: 549, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+      { id: 'delft',       name: 'Delft',         x: 120, y: 587, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+      { id: 'gouda',       name: 'Gouda',         x: 237, y: 587, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+      { id: 'rotterdam',   name: 'Rotterdam',    x: 160, y: 635, labelDx: 18,  labelDy: 5,   anchor: 'start'  },
+    ];
+
+    let selectedDot = null;
+    let matched = new Set();
+    let mistakes = 0;
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function init() {
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const group = document.getElementById('cities-group');
+      group.innerHTML = '';
+
+      // Stippen en labels op de kaart
+      cities.forEach(city => {
+        // Klikbare stip
+        const dot = document.createElementNS(svgNS, 'circle');
+        dot.setAttribute('cx', city.x);
+        dot.setAttribute('cy', city.y);
+        dot.setAttribute('r', 12);
+        dot.classList.add('dot');
+        dot.dataset.city = city.id;
+        dot.addEventListener('click', () => selectDot(city.id));
+        group.appendChild(dot);
+
+        // Stadsnaam (verschijnt na correct antwoord)
+        const label = document.createElementNS(svgNS, 'text');
+        label.setAttribute('x', city.x + city.labelDx);
+        label.setAttribute('y', city.y + city.labelDy);
+        label.setAttribute('text-anchor', city.anchor);
+        label.classList.add('city-label');
+        label.dataset.city = city.id;
+        label.textContent = city.name;
+        group.appendChild(label);
+      });
+
+      // Knoppen in de zijbalk (geschud)
+      const list = document.getElementById('cityList');
+      list.innerHTML = '';
+      shuffle(cities).forEach(city => {
+        const btn = document.createElement('button');
+        btn.className = 'city-btn';
+        btn.textContent = city.name;
+        btn.dataset.city = city.id;
+        btn.addEventListener('click', () => checkMatch(city.id));
+        list.appendChild(btn);
+      });
+
+      updateScore();
+      setHint('Klik op een stip op de kaart!', '');
+    }
+
+    function selectDot(cityId) {
+      if (matched.has(cityId)) return;
+
+      // Vorige selectie verwijderen
+      document.querySelectorAll('.dot.selected').forEach(d => d.classList.remove('selected'));
+
+      // Nieuwe selectie
+      const dot = document.querySelector(`.dot[data-city="${cityId}"]`);
+      dot.classList.add('selected');
+      selectedDot = cityId;
+      setHint('Welke stad hoort bij deze stip?', '');
+    }
+
+    function checkMatch(cityId) {
+      if (matched.has(cityId)) return;
+
+      if (!selectedDot) {
+        setHint('Klik eerst op een stip op de kaart!', 'wrong');
+        return;
+      }
+
+      const dot = document.querySelector(`.dot[data-city="${selectedDot}"]`);
+      const btn = document.querySelector(`.city-btn[data-city="${cityId}"]`);
+      const label = document.querySelector(`.city-label[data-city="${selectedDot}"]`);
+
+      if (cityId === selectedDot) {
+        // Goed!
+        matched.add(cityId);
+        dot.classList.remove('selected');
+        dot.classList.add('matched');
+        btn.classList.add('matched');
+        label.classList.add('visible');
+        selectedDot = null;
+        updateScore();
+        setHint('Goed zo! ✓', 'correct');
+
+        if (matched.size === cities.length) {
+          setTimeout(showCelebration, 600);
+        }
+      } else {
+        // Fout!
+        mistakes++;
+        dot.classList.add('wrong');
+        btn.classList.add('wrong');
+        setHint('Helaas, probeer het nog eens!', 'wrong');
+
+        setTimeout(() => {
+          dot.classList.remove('wrong');
+          dot.classList.add('selected');
+          btn.classList.remove('wrong');
+        }, 500);
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('score').textContent =
+        `Score: ${matched.size} / ${cities.length}`;
+    }
+
+    function setHint(text, type) {
+      const hint = document.getElementById('hint');
+      hint.textContent = text;
+      hint.className = 'hint' + (type ? ' ' + type : '');
+    }
+
+    function showCelebration() {
+      const el = document.getElementById('celebration');
+      el.classList.remove('hidden');
+
+      // Sterren op basis van fouten
+      const starsEl = document.getElementById('stars');
+      let starCount = 3;
+      if (mistakes > 0) starCount = 2;
+      if (mistakes > 3) starCount = 1;
+      starsEl.textContent = '⭐'.repeat(starCount);
+
+      const resultEl = document.getElementById('resultText');
+      if (mistakes === 0) {
+        resultEl.textContent = 'Wow, alles in één keer goed! 🏆';
+      } else if (mistakes <= 3) {
+        resultEl.textContent = `Heel goed! Maar ${mistakes} foutje${mistakes > 1 ? 's' : ''}.`;
+      } else {
+        resultEl.textContent = `Goed gedaan! Je had ${mistakes} foute pogingen.`;
+      }
+    }
+
+    function resetGame() {
+      document.getElementById('celebration').classList.add('hidden');
+      selectedDot = null;
+      matched = new Set();
+      mistakes = 0;
+      init();
+    }
+
+    init();
+  </script>
+</body>
+</html>
