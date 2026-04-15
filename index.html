@@ -44,7 +44,11 @@
       height: 70vh;
       min-height: 420px;
       max-height: 680px;
+      cursor: default !important;
     }
+
+    .leaflet-grab { cursor: default !important; }
+    .leaflet-dragging .leaflet-grab { cursor: default !important; }
 
     .leaflet-control-attribution { font-size: 10px; opacity: 0.6; }
 
@@ -241,7 +245,7 @@
     const leafletMap = L.map('map', {
       zoomControl: false,
       dragging: true,
-      scrollWheelZoom: false,
+      scrollWheelZoom: true,
       doubleClickZoom: false,
       boxZoom: false,
       keyboard: false,
