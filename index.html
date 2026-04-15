@@ -214,15 +214,14 @@
     </div>
 
     <div class="sidebar">
-      <h2>Steden</h2>
-      <div class="city-list" id="cityList"></div>
-
       <div class="score-bar">
         <span class="score" id="score">Score: 0 / 17</span>
         <button class="reset-btn" onclick="resetGame()">🔄 Opnieuw</button>
       </div>
-
       <p class="hint" id="hint">Klik op een stip op de kaart!</p>
+
+      <h2>Steden</h2>
+      <div class="city-list" id="cityList"></div>
     </div>
   </div>
 
@@ -241,12 +240,14 @@
     // ── Kaart ──────────────────────────────
     const leafletMap = L.map('map', {
       zoomControl: false,
-      dragging: false,
+      dragging: true,
       scrollWheelZoom: false,
       doubleClickZoom: false,
       boxZoom: false,
       keyboard: false,
-      touchZoom: false,
+      touchZoom: true,
+      minZoom: 8,
+      maxZoom: 10,
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
@@ -345,7 +346,7 @@
       cities.forEach(city => {
         const marker = L.circleMarker([city.lat, city.lng], {
           ...STYLES.normal,
-          radius: 12,
+          radius: 9,
         }).addTo(leafletMap);
         marker.on('click', () => selectDot(city.id));
         markers[city.id] = marker;
@@ -399,7 +400,7 @@
         markers[cityId].bindTooltip(city.name, {
           permanent: true,
           direction: 'top',
-          offset: [0, -14],
+          offset: [0, -11],
           className: 'matched-tooltip',
         });
 
