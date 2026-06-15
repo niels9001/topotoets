@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TopoToets – Noord- &amp; Zuid-Holland</title>
+  <title>TopoToets – Zeeland, Noord-Brabant &amp; Limburg</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -123,6 +123,11 @@
       flex: 1;
       min-height: 0;
       -webkit-overflow-scrolling: touch;
+    }
+
+    #waterList {
+      flex: 0 1 auto;
+      max-height: 40%;
     }
 
     .city-btn {
@@ -259,6 +264,9 @@
 
       <h2>Steden</h2>
       <div class="city-list" id="cityList"></div>
+
+      <h2>Wateren en overig</h2>
+      <div class="city-list" id="waterList"></div>
     </div>
   </div>
 
@@ -292,7 +300,7 @@
       maxZoom: 19,
     }).addTo(leafletMap);
 
-    leafletMap.fitBounds([[51.70, 3.50], [53.05, 5.55]]);
+    leafletMap.fitBounds([[50.70, 3.30], [51.85, 6.25]]);
 
     // Zet huidige zoom als minimum (niet uitzoomen) en +1 als max
     const startZoom = leafletMap.getZoom();
@@ -310,22 +318,11 @@
       interactive: false,
     }).addTo(leafletMap);
 
-    // ── Schiphol vliegtuig-icoon ─────────────
-    L.marker([52.3105, 4.7683], {
-      icon: L.divIcon({
-        html: '✈️',
-        className: 'schiphol-icon',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-      }),
-      interactive: false,
-      zIndexOffset: -1000,
-    }).addTo(leafletMap);
-
     // Provincienamen op de kaart
     [
-      { text: 'Noord-Holland', lat: 52.55, lng: 4.75 },
-      { text: 'Zuid-Holland',  lat: 52.00, lng: 4.45 },
+      { text: 'Zeeland',       lat: 51.50, lng: 3.85 },
+      { text: 'Noord-Brabant', lat: 51.65, lng: 5.10 },
+      { text: 'Limburg',       lat: 51.25, lng: 5.95 },
     ].forEach(p => {
       L.marker([p.lat, p.lng], {
         icon: L.divIcon({ html: p.text, className: 'province-overlay', iconSize: null }),
@@ -335,29 +332,35 @@
 
     // ── Steden ─────────────────────────────
     const cities = [
-      // Noord-Holland
-      { id: 'den-helder',  name: 'Den Helder',         lat: 52.9563, lng: 4.7594 },
-      { id: 'enkhuizen',   name: 'Enkhuizen',          lat: 52.7076, lng: 5.2953 },
-      { id: 'alkmaar',     name: 'Alkmaar',             lat: 52.6324, lng: 4.7534 },
-      { id: 'purmerend',   name: 'Purmerend',           lat: 52.5050, lng: 4.9597 },
-      { id: 'zaandam',     name: 'Zaandam',             lat: 52.4388, lng: 4.8268 },
-      { id: 'amsterdam',   name: 'Amsterdam',           lat: 52.3676, lng: 4.9041 },
-      { id: 'haarlem',     name: 'Haarlem',              lat: 52.3813, lng: 4.6369 },
-      { id: 'amstelveen',  name: 'Amstelveen',          lat: 52.3014, lng: 4.8637 },
-      { id: 'hilversum',   name: 'Hilversum',           lat: 52.2232, lng: 5.1763 },
-      { id: 'schiphol',    name: 'Schiphol',            lat: 52.3105, lng: 4.7683 },
-      // Zuid-Holland
-      { id: 'leiden',      name: 'Leiden',                lat: 52.1601, lng: 4.4970 },
-      { id: 'alphen',      name: 'Alphen aan den Rijn', lat: 52.1287, lng: 4.6576 },
-      { id: 'den-haag',    name: 'Den Haag',            lat: 52.0705, lng: 4.3007 },
-      { id: 'zoetermeer',  name: 'Zoetermeer',          lat: 52.0571, lng: 4.4931 },
-      { id: 'delft',       name: 'Delft',                lat: 52.0116, lng: 4.3571 },
-      { id: 'gouda',       name: 'Gouda',                lat: 52.0115, lng: 4.7105 },
-      { id: 'rotterdam',   name: 'Rotterdam',           lat: 51.9225, lng: 4.4792 },
-      { id: 'dordrecht',   name: 'Dordrecht',           lat: 51.8133, lng: 4.6901 },
-      // Overig
-      { id: 'randstad',    name: 'De Randstad',         lat: 52.0907, lng: 5.1214 },
+      // Zeeland
+      { id: 'middelburg',    name: 'Middelburg',       lat: 51.4988, lng: 3.6109 },
+      { id: 'vlissingen',    name: 'Vlissingen',       lat: 51.4426, lng: 3.5736 },
+      { id: 'terneuzen',     name: 'Terneuzen',        lat: 51.3349, lng: 3.8285 },
+      // Noord-Brabant
+      { id: 'bergen-op-zoom', name: 'Bergen op Zoom',  lat: 51.4951, lng: 4.2870 },
+      { id: 'roosendaal',    name: 'Roosendaal',       lat: 51.5305, lng: 4.4654 },
+      { id: 'breda',         name: 'Breda',            lat: 51.5719, lng: 4.7683 },
+      { id: 'tilburg',       name: 'Tilburg',          lat: 51.5555, lng: 5.0913 },
+      { id: 'den-bosch',     name: "'s-Hertogenbosch", lat: 51.6978, lng: 5.3037 },
+      { id: 'oss',           name: 'Oss',              lat: 51.7645, lng: 5.5179 },
+      { id: 'eindhoven',     name: 'Eindhoven',        lat: 51.4416, lng: 5.4697 },
+      { id: 'helmond',       name: 'Helmond',          lat: 51.4793, lng: 5.6612 },
+      // Limburg
+      { id: 'venlo',         name: 'Venlo',            lat: 51.3704, lng: 6.1724 },
+      { id: 'roermond',      name: 'Roermond',         lat: 51.1942, lng: 5.9870 },
+      { id: 'maastricht',    name: 'Maastricht',       lat: 50.8514, lng: 5.6900 },
+      { id: 'heerlen',       name: 'Heerlen',          lat: 50.8882, lng: 5.9795 },
     ];
+
+    // ── Wateren en overig ──────────────────
+    const waters = [
+      { id: 'oosterschelde',    name: 'Oosterschelde',     lat: 51.6200, lng: 3.9500 },
+      { id: 'westerschelde',    name: 'Westerschelde',     lat: 51.3900, lng: 3.7500 },
+      { id: 'zeeuws-vlaanderen', name: 'Zeeuws-Vlaanderen', lat: 51.3000, lng: 3.8500 },
+      { id: 'vaalserberg',      name: 'Vaalserberg',       lat: 50.7536, lng: 6.0208 },
+    ];
+
+    const allItems = [...cities, ...waters];
 
     const STYLES = {
       normal:   { fillColor: '#3b82f6', color: '#2563eb', weight: 2, fillOpacity: 0.9 },
@@ -387,7 +390,7 @@
       markers = {};
 
       // Stippen op de kaart
-      cities.forEach(city => {
+      allItems.forEach(city => {
         // Onzichtbare grotere cirkel voor touch
         const hitArea = L.circleMarker([city.lat, city.lng], {
           radius: 20,
@@ -405,10 +408,18 @@
         markers[city.id] = marker;
       });
 
-      // Knoppen in de zijbalk (geschud)
-      const list = document.getElementById('cityList');
+      // Knoppen in de zijbalk (geschud, per groep)
+      renderButtons('cityList', cities);
+      renderButtons('waterList', waters);
+
+      updateScore();
+      setHint('Klik op een stip op de kaart!', '');
+    }
+
+    function renderButtons(listId, items) {
+      const list = document.getElementById(listId);
       list.innerHTML = '';
-      shuffle(cities).forEach(city => {
+      shuffle(items).forEach(city => {
         const btn = document.createElement('button');
         btn.className = 'city-btn';
         btn.textContent = city.name;
@@ -416,9 +427,6 @@
         btn.addEventListener('click', () => checkMatch(city.id));
         list.appendChild(btn);
       });
-
-      updateScore();
-      setHint('Klik op een stip op de kaart!', '');
     }
 
     function selectDot(cityId) {
@@ -431,7 +439,7 @@
 
       markers[cityId].setStyle(STYLES.selected);
       selectedDot = cityId;
-      setHint('Welke stad hoort bij deze stip?', '');
+      setHint('Welk antwoord hoort bij deze stip?', '');
     }
 
     function checkMatch(cityId) {
@@ -449,7 +457,7 @@
         matchedSet.add(cityId);
         markers[cityId].setStyle(STYLES.matched);
 
-        const city = cities.find(c => c.id === cityId);
+        const city = allItems.find(c => c.id === cityId);
         markers[cityId].bindTooltip(city.name, {
           permanent: true,
           direction: 'top',
@@ -462,7 +470,7 @@
         updateScore();
         setHint('Goed zo! ✓', 'correct');
 
-        if (matchedSet.size === cities.length) {
+        if (matchedSet.size === allItems.length) {
           setTimeout(showCelebration, 600);
         }
       } else {
@@ -484,7 +492,7 @@
 
     function updateScore() {
       document.getElementById('score').textContent =
-        `Score: ${matchedSet.size} / ${cities.length}`;
+        `Score: ${matchedSet.size} / ${allItems.length}`;
     }
 
     function setHint(text, type) {
