@@ -115,19 +115,20 @@
 
     .sidebar h2 { font-size: 1.2rem; color: #475569; }
 
-    .city-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+    .scroll-area {
       overflow-y: auto;
       flex: 1;
       min-height: 0;
       -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
-    #waterList {
-      flex: 0 1 auto;
-      max-height: 40%;
+    .city-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
 
     .city-btn {
@@ -262,11 +263,13 @@
     <div class="sidebar">
       <p class="hint" id="hint">Klik op een stip op de kaart!</p>
 
-      <h2>Steden</h2>
-      <div class="city-list" id="cityList"></div>
+      <div class="scroll-area">
+        <h2>Steden</h2>
+        <div class="city-list" id="cityList"></div>
 
-      <h2>Wateren en overig</h2>
-      <div class="city-list" id="waterList"></div>
+        <h2>Wateren en overig</h2>
+        <div class="city-list" id="waterList"></div>
+      </div>
     </div>
   </div>
 
