@@ -113,7 +113,7 @@
       max-height: 100%;
     }
 
-    .sidebar h2 { font-size: 1.2rem; color: #475569; }
+    .sidebar h2 { font-size: 0.95rem; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
 
     .scroll-area {
       overflow-y: auto;
@@ -308,7 +308,7 @@
     // Zet huidige zoom als minimum (niet uitzoomen), ruimer in-zoomen toegestaan
     const startZoom = leafletMap.getZoom();
     leafletMap.setMinZoom(startZoom);
-    leafletMap.setMaxZoom(startZoom + 4);
+    leafletMap.setMaxZoom(startZoom + 5);
 
     // ── Provinciegrenzen (PDOK CBS data) ─────
     L.geoJSON(PROVINCE_GEOJSON, {
