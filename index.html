@@ -3,23 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TopoToets – Zeeland, Noord-Brabant &amp; Limburg</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <title>TopoToets – Groep 7</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
 
     body {
-      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: #f0f4f8;
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--cp-bg);
+      color: var(--cp-text);
       height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 1rem;
-      color: #1e293b;
-      overflow: hidden;
       position: fixed;
       width: 100%;
     }
@@ -30,28 +89,43 @@
       justify-content: space-between;
       width: 100%;
       max-width: 960px;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
       flex-shrink: 0;
     }
 
-    .top-bar-left {
-      display: flex;
-      align-items: baseline;
-      gap: 0.6rem;
+    .top-bar-left { display: flex; align-items: baseline; gap: 0.6rem; }
+    h1 { font-size: 1.5rem; color: var(--cp-accent); }
+    .subtitle { font-size: 0.9rem; color: var(--cp-text-muted); }
+    .top-bar-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    .score {
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.625rem;
+      background: var(--cp-accent-soft);
+      color: var(--cp-accent);
+      font-size: 0.95rem;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
-    h1 { font-size: 1.4rem; }
-    .subtitle { font-size: 0.9rem; color: #64748b; }
-
-    .top-bar-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+    .reset-btn {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--cp-accent);
+      border-radius: 0.625rem;
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.2s;
     }
+
+    .reset-btn:hover { background: var(--cp-accent-hover); transform: translateY(-1px); }
 
     .container {
       display: flex;
-      gap: 2rem;
+      gap: 1.5rem;
       max-width: 960px;
       width: 100%;
       align-items: stretch;
@@ -59,61 +133,50 @@
       min-height: 0;
     }
 
-    /* ── Kaart ─────────────────────────────── */
     .map-area {
       flex: 1.3;
-      background: #fff;
-      border-radius: 12px;
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 2px var(--cp-border);
       min-height: 0;
     }
 
-    #map {
-      width: 100%;
-      height: 100%;
-      cursor: default !important;
+    #map { width: 100%; height: 100%; background: var(--cp-border); }
+    .leaflet-control-attribution {
+      background: var(--cp-panel-strong) !important;
+      color: var(--cp-text-muted);
+      font-size: 10px;
+    }
+    .leaflet-control-attribution a { color: var(--cp-link); }
+    .leaflet-bar a, .leaflet-bar a:hover {
+      background: var(--cp-surface);
+      color: var(--cp-accent);
+      border-bottom-color: var(--cp-border);
+    }
+    .leaflet-bar a.leaflet-disabled {
+      background: var(--cp-surface-soft);
+      color: var(--cp-text-muted);
     }
 
-    .leaflet-grab { cursor: default !important; }
-    .leaflet-dragging .leaflet-grab { cursor: default !important; }
-
-    .leaflet-control-attribution { font-size: 10px; opacity: 0.6; }
-
-    .matched-tooltip {
-      background: #166534;
-      border: none;
-      color: #fff;
-      font-weight: 600;
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-    }
-    .matched-tooltip::before {
-      border-top-color: #166534 !important;
-    }
-
-    .province-overlay {
-      font-size: 13px;
-      font-weight: 700;
-      color: #94a3b8;
-      white-space: nowrap;
-      pointer-events: none;
-      text-shadow: 1px 1px 2px #fff;
-    }
-
-    /* ── Zijbalk ──────────────────────────── */
     .sidebar {
       flex: 0.7;
       display: flex;
       flex-direction: column;
-      gap: 0.8rem;
+      gap: 0.75rem;
       min-height: 0;
       max-height: 100%;
     }
 
-    .sidebar h2 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .sidebar h2 {
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      color: var(--cp-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
 
     .scroll-area {
       overflow-y: auto;
@@ -125,151 +188,139 @@
       gap: 0.5rem;
     }
 
-    .city-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
+    .answer-list { display: flex; flex-direction: column; gap: 0.25rem; }
 
-    .city-btn {
-      padding: 0.25rem 0.7rem;
+    .answer-btn {
+      padding: 0.5rem 0.75rem;
+      min-height: 2.5rem;
+      font: inherit;
       font-size: 0.9rem;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
       text-align: left;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      background: var(--cp-surface);
+      color: var(--cp-text);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
     }
 
-    .city-btn:hover:not(.matched) {
-      border-color: #3b82f6;
-      background: #eff6ff;
+    .answer-btn:hover:not(.matched) {
+      border-color: var(--cp-accent);
+      background: var(--cp-accent-soft);
+      transform: translateX(2px);
     }
 
-    .city-btn.matched {
-      background: #22c55e;
-      border-color: #16a34a;
-      color: #fff;
+    .answer-btn.matched {
+      background: var(--cp-success);
+      border-color: var(--cp-success);
+      color: var(--cp-accent-fg);
       cursor: default;
       text-decoration: line-through;
     }
 
-    .city-btn.wrong {
+    .answer-btn.wrong {
       animation: shake 0.45s;
-      border-color: #ef4444;
-      background: #fef2f2;
+      border-color: var(--cp-danger);
+      color: var(--cp-danger);
     }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-6px); }
-      80% { transform: translateX(6px); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
     }
 
-    /* ── Score & hint ─────────────────────── */
-    .score { font-size: 1rem; font-weight: 700; color: #334155; white-space: nowrap; }
-
-    .reset-btn {
-      padding: 0.4rem 0.8rem;
-      font-size: 0.85rem;
-      border: 2px solid #94a3b8;
-      border-radius: 8px;
-      background: #f8fafc;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
-      white-space: nowrap;
+    .hint {
+      padding: 0.75rem;
+      border: 1px solid var(--cp-border);
+      border-radius: 0.625rem;
+      background: var(--cp-surface);
+      font-size: 0.9rem;
+      color: var(--cp-text-muted);
+      line-height: 1.3;
     }
+    .hint.correct { color: var(--cp-success); font-weight: 700; }
+    .hint.wrong { color: var(--cp-danger); font-weight: 700; }
 
-    .reset-btn:hover { background: #e2e8f0; border-color: #64748b; }
-
-    .hint { font-size: 0.9rem; color: #64748b; line-height: 1.3; }
-    .hint:empty { display: none; }
-    .hint.correct { color: #16a34a; font-weight: 600; }
-    .hint.wrong { color: #dc2626; font-weight: 600; }
-
-    /* ── Feest! ────────────────────────────── */
     .celebration {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      background: var(--cp-overlay);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       z-index: 1000;
     }
-
     .celebration.hidden { display: none; }
-
     .celebration-card {
-      background: #fff; border-radius: 16px; padding: 2.5rem;
-      text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      background: var(--cp-surface);
+      border: 1px solid var(--cp-border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      text-align: center;
+      box-shadow: var(--cp-shadow);
       animation: pop-in 0.4s ease-out;
     }
-
-    .celebration-card h2 { font-size: 2rem; margin-bottom: 0.5rem; }
-    .celebration-card p { font-size: 1.1rem; color: #475569; margin-bottom: 1.5rem; }
+    .celebration-card h2 { font-size: 2rem; margin-bottom: 0.5rem; color: var(--cp-accent); }
+    .celebration-card p { font-size: 1.1rem; color: var(--cp-text-muted); margin-bottom: 1.5rem; }
     .celebration-card .stars { font-size: 2.5rem; margin-bottom: 1rem; }
-
     .celebration-card button {
-      padding: 0.7rem 1.5rem; font-size: 1.1rem; border: none; border-radius: 8px;
-      background: #3b82f6; color: #fff; cursor: pointer; font-family: inherit;
-      transition: background 0.2s;
+      padding: 0.75rem 1.5rem;
+      font: inherit;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 0.625rem;
+      background: var(--cp-accent);
+      color: var(--cp-accent-fg);
+      cursor: pointer;
     }
-
-    .celebration-card button:hover { background: #2563eb; }
+    .celebration-card button:hover { background: var(--cp-accent-hover); }
 
     @keyframes pop-in {
-      0% { transform: scale(0.5); opacity: 0; }
+      0% { transform: scale(0.85); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
 
-    .schiphol-icon {
-      font-size: 22px;
-      line-height: 1;
-      filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
-      pointer-events: none !important;
-    }
-
-    /* ── Responsive ────────────────────────── */
     @media (max-width: 700px) {
       body { padding: 0.5rem; }
-      .top-bar { flex-wrap: wrap; gap: 0.3rem; }
+      .top-bar { flex-wrap: wrap; gap: 0.5rem; }
       .container { flex-direction: column; gap: 0.5rem; }
       .map-area { width: 100%; flex: none; height: 40vh; }
-      #map { height: 100%; }
       .sidebar { width: 100%; flex: 1; min-height: 0; }
       h1 { font-size: 1.2rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .answer-btn, .reset-btn { transition: none; }
+      .answer-btn.wrong, .celebration-card { animation: none; }
     }
   </style>
 </head>
 <body>
   <div class="top-bar">
     <div class="top-bar-left">
-      <h1>🗺️ TopoToets</h1>
-      <span class="subtitle">Groep 6 van de Harlekijn</span>
+      <h1>🧭 TopoToets</h1>
+      <span class="subtitle">Groep 7 van de Harlekijn</span>
     </div>
     <div class="top-bar-right">
-      <span class="score" id="score">Score: 0 / 19</span>
-      <button class="reset-btn" onclick="resetGame()">🔄 Opnieuw</button>
+      <span class="score" id="score" aria-live="polite">⭐ Score: 0 / 18</span>
+      <button class="reset-btn" onclick="resetGame()">↻ Opnieuw</button>
     </div>
   </div>
 
   <div class="container">
     <div class="map-area">
-      <div id="map"></div>
+      <div id="map" role="region" aria-label="Kaart met aanklikbare landen, steden en wateren"></div>
     </div>
 
     <div class="sidebar">
-      <p class="hint" id="hint"></p>
-
+      <p class="hint" id="hint" aria-live="polite"></p>
       <div class="scroll-area">
-        <h2>Steden</h2>
-        <div class="city-list" id="cityList"></div>
-
-        <h2>Wateren en overig</h2>
-        <div class="city-list" id="waterList"></div>
+        <h2>🌍 Landen</h2>
+        <div class="answer-list" id="countryList"></div>
+        <h2>📍 Steden</h2>
+        <div class="answer-list" id="cityList"></div>
+        <h2>🌊 Overig / wateren</h2>
+        <div class="answer-list" id="otherList"></div>
       </div>
     </div>
   </div>
@@ -277,226 +328,216 @@
   <div class="celebration hidden" id="celebration">
     <div class="celebration-card">
       <div class="stars" id="stars"></div>
-      <h2>🎉 Gefeliciteerd!</h2>
+      <h2>🎉 Geweldig gedaan!</h2>
       <p id="resultText"></p>
       <button onclick="resetGame()">Nog een keer!</button>
     </div>
   </div>
 
-  <script src="provinces.js?v=2"></script>
+  <script src="basemap.js?v=1"></script>
+  <script src="geography.js?v=1"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ── Kaart ──────────────────────────────
+    const countries = [
+      { id: 'switzerland', name: 'Zwitserland' },
+      { id: 'austria', name: 'Oostenrijk' },
+      { id: 'italy', name: 'Italië' },
+      { id: 'romania', name: 'Roemenië' },
+      { id: 'turkey', name: 'Turkije' },
+      { id: 'iraq', name: 'Irak' },
+      { id: 'iran', name: 'Iran' },
+    ];
+
+    const cities = [
+      { id: 'geneva', name: 'Genève', lat: 46.2044, lng: 6.1432 },
+      { id: 'bern', name: 'Bern', lat: 46.9480, lng: 7.4474 },
+      { id: 'vienna', name: 'Wenen', lat: 48.2082, lng: 16.3738 },
+      { id: 'milan', name: 'Milaan', lat: 45.4642, lng: 9.1900 },
+      { id: 'bucharest', name: 'Boekarest', lat: 44.4268, lng: 26.1025 },
+      { id: 'istanbul', name: 'Istanbul', lat: 41.0082, lng: 28.9784 },
+      { id: 'ankara', name: 'Ankara', lat: 39.9334, lng: 32.8597 },
+      { id: 'baghdad', name: 'Bagdad', lat: 33.3152, lng: 44.3661 },
+      { id: 'tehran', name: 'Teheran', lat: 35.6892, lng: 51.3890 },
+    ];
+
+    const others = [
+      { id: 'po', name: 'Po', lat: 45.0282, lng: 10.6715 },
+      { id: 'sicily', name: 'Sicilië', lat: 37.53, lng: 14.00 },
+    ];
+
+    const allItems = [...countries, ...cities, ...others];
+    const color = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const palette = {
+      accent: color('--cp-accent'),
+      warning: color('--cp-warning'),
+      success: color('--cp-success'),
+      danger: color('--cp-danger'),
+      surface: color('--cp-surface'),
+      border: color('--cp-border-strong'),
+    };
+
+    const AREA_STYLES = {
+      normal:   { color: palette.accent,  fillColor: palette.accent,  weight: 2, fillOpacity: 0.12 },
+      selected: { color: palette.warning, fillColor: palette.warning, weight: 3, fillOpacity: 0.3 },
+      matched:  { color: palette.success, fillColor: palette.success, weight: 2, fillOpacity: 0.28 },
+      wrong:    { color: palette.danger,  fillColor: palette.danger,  weight: 3, fillOpacity: 0.3 },
+    };
+    const RIVER_STYLES = {
+      normal:   { color: palette.accent,  weight: 5, opacity: 0.85 },
+      selected: { color: palette.warning, weight: 8, opacity: 1 },
+      matched:  { color: palette.success, weight: 6, opacity: 1 },
+      wrong:    { color: palette.danger,  weight: 8, opacity: 1 },
+    };
+    const POINT_STYLES = {
+      normal:   { color: palette.surface, fillColor: palette.accent,  weight: 2, fillOpacity: 1 },
+      selected: { color: palette.surface, fillColor: palette.warning, weight: 2, fillOpacity: 1 },
+      matched:  { color: palette.surface, fillColor: palette.success, weight: 2, fillOpacity: 1 },
+      wrong:    { color: palette.surface, fillColor: palette.danger,  weight: 2, fillOpacity: 1 },
+    };
+
     const leafletMap = L.map('map', {
       zoomControl: false,
       dragging: true,
       scrollWheelZoom: true,
-      doubleClickZoom: false,
+      doubleClickZoom: true,
       boxZoom: false,
       keyboard: false,
       touchZoom: true,
-      minZoom: 7,
-      maxZoom: 15,
+      zoomSnap: 0.5,
+      minZoom: 2,
+      maxZoom: 10,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-      maxZoom: 19,
+    L.control.zoom({
+      position: 'topright',
+      zoomInTitle: 'Inzoomen',
+      zoomOutTitle: 'Uitzoomen',
     }).addTo(leafletMap);
-
-    leafletMap.fitBounds([[50.70, 3.30], [51.85, 6.25]]);
-
-    // Zet huidige zoom als minimum (niet uitzoomen), ruimer in-zoomen toegestaan
-    const startZoom = leafletMap.getZoom();
-    leafletMap.setMinZoom(startZoom);
-    leafletMap.setMaxZoom(startZoom + 5);
-
-    // ── Provinciegrenzen (PDOK CBS data) ─────
-    L.geoJSON(PROVINCE_GEOJSON, {
-      style: {
-        color: '#94a3b8',
-        weight: 2,
-        fillColor: '#cbd5e1',
-        fillOpacity: 0.08,
-      },
+    leafletMap.attributionControl.setPrefix(false);
+    leafletMap.attributionControl.addAttribution('<a href="https://www.naturalearthdata.com/">Natural Earth</a>');
+    L.geoJSON(BASEMAP_GEOJSON, {
       interactive: false,
+      style: { color: palette.border, weight: 0.8, fillColor: palette.surface, fillOpacity: 1 },
     }).addTo(leafletMap);
+    leafletMap.fitBounds([[29.5, 5.5], [49.5, 59]], { padding: [16, 16] });
 
-    // Provincienamen op de kaart
-    [
-      { text: 'Zeeland',       lat: 51.50, lng: 3.85 },
-      { text: 'Noord-Brabant', lat: 51.65, lng: 5.10 },
-      { text: 'Limburg',       lat: 51.25, lng: 5.95 },
-    ].forEach(p => {
-      L.marker([p.lat, p.lng], {
-        icon: L.divIcon({ html: p.text, className: 'province-overlay', iconSize: null }),
-        interactive: false,
-      }).addTo(leafletMap);
-    });
-
-    // ── Steden ─────────────────────────────
-    const cities = [
-      // Zeeland
-      { id: 'middelburg',    name: 'Middelburg',       lat: 51.4988, lng: 3.6109 },
-      { id: 'vlissingen',    name: 'Vlissingen',       lat: 51.4426, lng: 3.5736 },
-      { id: 'terneuzen',     name: 'Terneuzen',        lat: 51.3349, lng: 3.8285 },
-      // Noord-Brabant
-      { id: 'bergen-op-zoom', name: 'Bergen op Zoom',  lat: 51.4951, lng: 4.2870 },
-      { id: 'roosendaal',    name: 'Roosendaal',       lat: 51.5305, lng: 4.4654 },
-      { id: 'breda',         name: 'Breda',            lat: 51.5719, lng: 4.7683 },
-      { id: 'tilburg',       name: 'Tilburg',          lat: 51.5555, lng: 5.0913 },
-      { id: 'den-bosch',     name: "'s-Hertogenbosch", lat: 51.6978, lng: 5.3037 },
-      { id: 'oss',           name: 'Oss',              lat: 51.7645, lng: 5.5179 },
-      { id: 'eindhoven',     name: 'Eindhoven',        lat: 51.4416, lng: 5.4697 },
-      { id: 'helmond',       name: 'Helmond',          lat: 51.4793, lng: 5.6612 },
-      // Limburg
-      { id: 'venlo',         name: 'Venlo',            lat: 51.3704, lng: 6.1724 },
-      { id: 'roermond',      name: 'Roermond',         lat: 51.1942, lng: 5.9870 },
-      { id: 'maastricht',    name: 'Maastricht',       lat: 50.8514, lng: 5.6900 },
-      { id: 'heerlen',       name: 'Heerlen',          lat: 50.8882, lng: 5.9795 },
-    ];
-
-    // ── Wateren en overig ──────────────────
-    const waters = [
-      { id: 'oosterschelde',    name: 'Oosterschelde',     lat: 51.583088, lng: 3.927349 },
-      { id: 'westerschelde',    name: 'Westerschelde',     lat: 51.374397, lng: 3.749881 },
-      { id: 'zeeuws-vlaanderen', name: 'Zeeuws-Vlaanderen', lat: 51.288019, lng: 3.716948 },
-      { id: 'vaalserberg',      name: 'Vaalserberg',       lat: 50.7536, lng: 6.0208 },
-    ];
-
-    const allItems = [...cities, ...waters];
-
-    const STYLES = {
-      normal:   { fillColor: '#3b82f6', color: '#2563eb', weight: 2, fillOpacity: 0.9 },
-      selected: { fillColor: '#f59e0b', color: '#d97706', weight: 3, fillOpacity: 1   },
-      matched:  { fillColor: '#22c55e', color: '#15803d', weight: 2, fillOpacity: 0.9 },
-      wrong:    { fillColor: '#ef4444', color: '#dc2626', weight: 3, fillOpacity: 1   },
-    };
-
-    // ── Game state ─────────────────────────
-    let markers = {};
-    let selectedDot = null;
-    let matchedSet = new Set();
-    let mistakes = 0;
-
-    function shuffle(arr) {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
+    function shapeStyle(feature, state) {
+      const base = feature.properties.kind === 'river' ? RIVER_STYLES[state] : AREA_STYLES[state];
+      return feature.properties.kind === 'island' ? { ...base, dashArray: '5 4' } : base;
     }
 
-    function init() {
-      // Oude markers verwijderen
-      Object.values(markers).forEach(m => leafletMap.removeLayer(m));
-      markers = {};
+    const shapeLayers = new Map();
+    const pointLayers = new Map();
+    const buttons = new Map();
 
-      // Stippen op de kaart
-      allItems.forEach(city => {
-        // Onzichtbare grotere cirkel voor touch
-        const hitArea = L.circleMarker([city.lat, city.lng], {
-          radius: 20,
-          fillOpacity: 0,
-          opacity: 0,
-          interactive: true,
-        }).addTo(leafletMap);
-        hitArea.on('click', () => selectDot(city.id));
+    L.geoJSON(MAP_FEATURES, {
+      style: feature => shapeStyle(feature, 'normal'),
+      onEachFeature(feature, layer) {
+        const id = feature.properties.id;
+        shapeLayers.set(id, layer);
+        layer.on('click', () => selectLocation(id));
+      },
+    }).addTo(leafletMap);
 
-        const marker = L.circleMarker([city.lat, city.lng], {
-          ...STYLES.normal,
-          radius: 10,
-        }).addTo(leafletMap);
-        marker.on('click', () => selectDot(city.id));
-        markers[city.id] = marker;
-      });
+    const riverFeature = MAP_FEATURES.features.find(feature => feature.properties.id === 'po');
+    if (!riverFeature || [...countries, ...others].some(item => !shapeLayers.has(item.id))) {
+      throw new Error('Kaartgegevens voor de topo-quiz ontbreken.');
+    }
+    L.geoJSON(riverFeature, {
+      style: { color: palette.accent, weight: 18, opacity: 0 },
+      onEachFeature(_, layer) { layer.on('click', () => selectLocation('po')); },
+    }).addTo(leafletMap);
 
-      // Knoppen in de zijbalk (geschud, per groep)
-      renderButtons('cityList', cities);
-      renderButtons('waterList', waters);
+    [...cities, ...others].forEach(item => {
+      const marker = L.circleMarker([item.lat, item.lng], {
+        ...POINT_STYLES.normal,
+        radius: 10,
+      }).addTo(leafletMap);
+      marker.on('click', () => selectLocation(item.id));
+      pointLayers.set(item.id, marker);
+    });
 
-      updateScore();
-      setHint('', '');
+    function setItemStyle(id, state) {
+      const shape = shapeLayers.get(id);
+      if (shape) {
+        const feature = MAP_FEATURES.features.find(entry => entry.properties.id === id);
+        shape.setStyle(shapeStyle(feature, state));
+      }
+      const point = pointLayers.get(id);
+      if (point) point.setStyle(POINT_STYLES[state]);
+    }
+
+    let selectedId = null;
+    const matchedSet = new Set();
+    let mistakes = 0;
+    let celebrationTimer = null;
+
+    function shuffle(items) {
+      const shuffled = [...items];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
     }
 
     function renderButtons(listId, items) {
       const list = document.getElementById(listId);
-      list.innerHTML = '';
-      shuffle(items).forEach(city => {
-        const btn = document.createElement('button');
-        btn.className = 'city-btn';
-        btn.textContent = city.name;
-        btn.dataset.city = city.id;
-        btn.addEventListener('click', () => checkMatch(city.id));
-        list.appendChild(btn);
+      list.replaceChildren();
+      shuffle(items).forEach(item => {
+        const button = document.createElement('button');
+        button.className = 'answer-btn';
+        button.textContent = item.name;
+        button.addEventListener('click', () => checkMatch(item.id));
+        list.appendChild(button);
+        buttons.set(item.id, button);
       });
     }
 
-    function selectDot(cityId) {
-      if (matchedSet.has(cityId)) return;
-
-      // Vorige selectie resetten
-      if (selectedDot && !matchedSet.has(selectedDot)) {
-        markers[selectedDot].setStyle(STYLES.normal);
-      }
-
-      markers[cityId].setStyle(STYLES.selected);
-      selectedDot = cityId;
-      setHint('Welk antwoord hoort bij deze stip?', '');
+    function selectLocation(id) {
+      if (matchedSet.has(id)) return;
+      if (selectedId) setItemStyle(selectedId, 'normal');
+      selectedId = id;
+      setItemStyle(id, 'selected');
+      setHint('Welk antwoord hoort bij deze plek? ✨', '');
     }
 
-    function checkMatch(cityId) {
-      if (matchedSet.has(cityId)) return;
-
-      if (!selectedDot) {
-        setHint('Klik eerst op een stip op de kaart!', 'wrong');
+    function checkMatch(id) {
+      if (matchedSet.has(id)) return;
+      if (!selectedId) {
+        setHint('Tik eerst op een land, stip of rivier op de kaart!', 'wrong');
         return;
       }
 
-      const btn = document.querySelector(`.city-btn[data-city="${cityId}"]`);
-
-      if (cityId === selectedDot) {
-        // Goed!
-        matchedSet.add(cityId);
-        markers[cityId].setStyle(STYLES.matched);
-
-        const city = allItems.find(c => c.id === cityId);
-        markers[cityId].bindTooltip(city.name, {
-          permanent: true,
-          direction: 'top',
-          offset: [0, -11],
-          className: 'matched-tooltip',
-        });
-
-        btn.classList.add('matched');
-        selectedDot = null;
+      const button = buttons.get(id);
+      if (id === selectedId) {
+        matchedSet.add(id);
+        setItemStyle(id, 'matched');
+        button.classList.add('matched');
+        selectedId = null;
         updateScore();
-        setHint('Goed zo! ✓', 'correct');
-
+        setHint('Yes, goed gevonden! 🎉', 'correct');
         if (matchedSet.size === allItems.length) {
-          setTimeout(showCelebration, 600);
+          celebrationTimer = setTimeout(showCelebration, 650);
         }
       } else {
-        // Fout!
         mistakes++;
-        const current = selectedDot;
-        markers[current].setStyle(STYLES.wrong);
-        btn.classList.add('wrong');
-        setHint('Helaas, probeer het nog eens!', 'wrong');
-
+        const current = selectedId;
+        setItemStyle(current, 'wrong');
+        button.classList.add('wrong');
+        setHint('Bijna! Kijk nog eens goed op de kaart.', 'wrong');
         setTimeout(() => {
-          if (selectedDot === current && !matchedSet.has(current)) {
-            markers[current].setStyle(STYLES.selected);
+          if (selectedId === current && !matchedSet.has(current)) {
+            setItemStyle(current, 'selected');
           }
-          btn.classList.remove('wrong');
+          button.classList.remove('wrong');
         }, 500);
       }
     }
 
     function updateScore() {
       document.getElementById('score').textContent =
-        `Score: ${matchedSet.size} / ${allItems.length}`;
+        `⭐ Score: ${matchedSet.size} / ${allItems.length}`;
     }
 
     function setHint(text, type) {
@@ -506,31 +547,32 @@
     }
 
     function showCelebration() {
-      const el = document.getElementById('celebration');
-      el.classList.remove('hidden');
-
-      let starCount = mistakes === 0 ? 3 : mistakes <= 3 ? 2 : 1;
-      document.getElementById('stars').textContent = '⭐'.repeat(starCount);
-
-      const resultEl = document.getElementById('resultText');
-      if (mistakes === 0) {
-        resultEl.textContent = 'Wow, alles in één keer goed! 🏆';
-      } else if (mistakes <= 3) {
-        resultEl.textContent = `Heel goed! Maar ${mistakes} foutje${mistakes > 1 ? 's' : ''}.`;
-      } else {
-        resultEl.textContent = `Goed gedaan! Je had ${mistakes} foute pogingen.`;
-      }
+      document.getElementById('celebration').classList.remove('hidden');
+      const stars = mistakes === 0 ? 3 : mistakes <= 3 ? 2 : 1;
+      document.getElementById('stars').textContent = '⭐'.repeat(stars);
+      document.getElementById('resultText').textContent =
+        mistakes === 0
+          ? 'Alles in één keer goed! Wat een wereldkenner! 🏆'
+          : `Knap gedaan! Je had ${mistakes} foute poging${mistakes === 1 ? '' : 'en'}.`;
     }
 
     function resetGame() {
+      clearTimeout(celebrationTimer);
+      celebrationTimer = null;
       document.getElementById('celebration').classList.add('hidden');
-      selectedDot = null;
-      matchedSet = new Set();
+      selectedId = null;
+      matchedSet.clear();
       mistakes = 0;
-      init();
+      buttons.clear();
+      allItems.forEach(item => setItemStyle(item.id, 'normal'));
+      renderButtons('countryList', countries);
+      renderButtons('cityList', cities);
+      renderButtons('otherList', others);
+      updateScore();
+      setHint('Tik op een land, stip of rivier en kies rechts het antwoord. Zoom in met + voor plekken dicht bij elkaar! 🌍', '');
     }
 
-    init();
+    resetGame();
   </script>
 </body>
 </html>
